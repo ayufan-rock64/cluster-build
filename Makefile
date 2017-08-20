@@ -32,8 +32,8 @@ image/rk3328evb-miniloader.img:
 	mv $@.tmp $@
 	rm miniloader.tmp
 
-u-boot/.config: u-boot/configs/evb-rk3328_defconfig
-	make -C u-boot evb-rk3328_defconfig
+u-boot/.config: u-boot/configs/rock64-rk3328_defconfig
+	make -C u-boot rock64-rk3328_defconfig
 
 ifeq ($(FORCE), 1)
 .PHONY: u-boot/u-boot-dtb.bin
