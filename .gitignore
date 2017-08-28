@@ -1,4 +1,6 @@
-arm-trusted-firmware/
-rkbin
-rkflashtool
-u-boot
+/arm-trusted-firmware/
+/rkbin/
+/rkflashtool/
+/u-boot/
+/image/
+/kernel/
