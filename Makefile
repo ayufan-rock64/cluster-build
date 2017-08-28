@@ -1,4 +1,4 @@
-DEFCONFIG ?= defconfig
+DEFCONFIG ?= rockchip_linux_defconfig
 
 all: image
 
@@ -48,9 +48,12 @@ ifeq ($(FORCE), 1)
 .PHONY: image/kernel-arm64
 endif
 image/kernel-arm64: kernel/.config
-	make -C kernel all ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j4
-	make -C kernel dtbs_install ARCH=arm64 INSTALL_DTBS_PATH=$(CURDIR)/image/dtbs
+	make -C kernel Image ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j4
 	cp kernel/arch/arm64/boot/Image $@
+
+image/rockchip/rk3328-rock64.dtb: kernel/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts kernel/arch/arm64/boot/dts/rockchip/rk3328.dtsi
+	make -C kernel dtbs ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j4
+	make -C kernel dtbs_install ARCH=arm64 INSTALL_DTBS_PATH=$(CURDIR)/image/dtbs
 
 .PHONY: kernel-build
 kernel-build: image/kernel
@@ -77,14 +80,23 @@ image/coreos-complete-initrd-arm64.img.gz: bootengine.cpio.gz image/coreos-initr
 	cat $^ > $@.tmp
 	mv $@.tmp $@
 
+image/alpine-initrd-arm64.img.gz:
+	wget -O $@.raw.tmp http://dl-cdn.alpinelinux.org/alpine/v3.6/releases/aarch64/alpine-minirootfs-3.6.2-aarch64.tar.gz
+	sudo rm -rf tmp/alpine-initrd
+	mkdir -p tmp/alpine-initrd
+	sudo -u root bash -c "tar zxf $@.raw.tmp -C tmp/alpine-initrd && cd tmp/alpine-initrd && find . | cpio -o -H newc && rm -rf tmp/alpine-initrd" | gzip -c > $@.tmp
+	rm -rf $@.raw.tmp
+	mv $@.tmp $@
+
 image/bootengine.cpio.gz: bootengine.cpio.gz
 	cp $< $@
 
-image: image/rk3328evb-trust.img image/rk3328evb-uboot.bin image/rk3328evb-miniloader.img \
+image: image/rk3328evb-trust.img \
+	image/rk3328evb-uboot.bin \
+	image/rk3328evb-miniloader.img \
 	image/kernel-arm64 \
-	image/coreos-initrd-arm64.img.gz \
-	image/coreos-complete-initrd-arm64.img.gz \
-	image/bootengine.cpio.gz \
+	image/rockchip/rk3328-rock64.dtb \
+	image/alpine-initrd-arm64.img.gz \
 	image/pxelinux.cfg/default-arm-rockchip \
 	image/extlinux/extlinux.conf
 
@@ -110,8 +122,6 @@ flashrom:
 	rkflashtool e 64 32704
 	rkflashtool w 64 8000 < image/rk3328evb-miniloader.img
 	rkflashtool b
-	cat rkbin/rk33/rk3328_ddr_333MHz*.bin | openssl rc4 -K 7c4e0304550509072d2c7b38170d1711 | rkflashtool l
-	cat rkbin/rk33/rk3328_miniloader*.bin | openssl rc4 -K 7c4e0304550509072d2c7b38170d1711 | rkflashtool L
 	sleep 2s
 	rkflashtool w 8192 8192 < image/rk3328evb-uboot.bin
 	rkflashtool w 16384 8192 < image/rk3328evb-trust.img
@@ -130,3 +140,9 @@ maskload:
 reboot:
 	rkflashtool b
 
+.PHONY: kernel-menuconfig
+kernel-menuconfig:
+	make -C kernel ARCH=arm64 $(KERNEL_DEFCONFIG)
+	make -C kernel ARCH=arm64 menuconfig
+	make -C kernel ARCH=arm64 savedefconfig
+	cp kernel/defconfig kernel/arch/arm64/configs/$(KERNEL_DEFCONFIG)
