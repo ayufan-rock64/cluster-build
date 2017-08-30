@@ -1,4 +1,4 @@
-DEFCONFIG ?= rockchip_linux_defconfig
+KERNEL_DEFCONFIG ?= rockchip_linux_defconfig
 
 all: image
 
@@ -41,8 +41,8 @@ endif
 u-boot/u-boot-dtb.bin: u-boot/.config
 	make -C u-boot CROSS_COMPILE="ccache aarch64-linux-gnu-" DEBUG=$(DEBUG) all -j4
 
-kernel/.config: kernel/arch/arm64/configs/$(DEFCONFIG)
-	make -C kernel $(DEFCONFIG) ARCH=arm64
+kernel/.config: kernel/arch/arm64/configs/$(KERNEL_DEFCONFIG)
+	make -C kernel $(KERNEL_DEFCONFIG) ARCH=arm64
 
 ifeq ($(FORCE), 1)
 .PHONY: image/kernel-arm64
@@ -51,7 +51,7 @@ image/kernel-arm64: kernel/.config
 	make -C kernel Image ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j4
 	cp kernel/arch/arm64/boot/Image $@
 
-image/rockchip/rk3328-rock64.dtb: kernel/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts kernel/arch/arm64/boot/dts/rockchip/rk3328.dtsi
+image/dtbs/rockchip/rk3328-rock64.dtb: kernel/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts kernel/arch/arm64/boot/dts/rockchip/rk3328.dtsi
 	make -C kernel dtbs ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j4
 	make -C kernel dtbs_install ARCH=arm64 INSTALL_DTBS_PATH=$(CURDIR)/image/dtbs
 
@@ -80,13 +80,30 @@ image/coreos-complete-initrd-arm64.img.gz: bootengine.cpio.gz image/coreos-initr
 	cat $^ > $@.tmp
 	mv $@.tmp $@
 
-image/alpine-initrd-arm64.img.gz:
-	wget -O $@.raw.tmp http://dl-cdn.alpinelinux.org/alpine/v3.6/releases/aarch64/alpine-minirootfs-3.6.2-aarch64.tar.gz
-	sudo rm -rf tmp/alpine-initrd
+tmp/alpine-minirootfs-3.6.2-aarch64.tar.gz:
 	mkdir -p tmp/alpine-initrd
-	sudo -u root bash -c "tar zxf $@.raw.tmp -C tmp/alpine-initrd && cd tmp/alpine-initrd && find . | cpio -o -H newc && rm -rf tmp/alpine-initrd" | gzip -c > $@.tmp
-	rm -rf $@.raw.tmp
+	wget -O $@.tmp http://dl-cdn.alpinelinux.org/alpine/v3.6/releases/aarch64/alpine-minirootfs-3.6.2-aarch64.tar.gz
 	mv $@.tmp $@
+
+tmp/alpine-initrd: tmp/alpine-minirootfs-3.6.2-aarch64.tar.gz
+	mkdir -p tmp/alpine-initrd
+	sudo tar -zxf $< -C $@
+	sudo chmod 755 tmp/alpine-initrd
+	sudo touch $@
+
+ifeq ($(FORCE), 1)
+.PHONY: image/alpine-initrd-arm64.img.gz
+endif
+image/alpine-initrd-arm64.img.gz: tmp/alpine-initrd
+	sudo cp /usr/bin/qemu-aarch64-static tmp/alpine-initrd/usr/bin/
+	sudo cp /etc/resolv.conf tmp/alpine-initrd/etc/
+	# sudo chroot tmp/alpine-initrd apk add openrc --no-cache
+	# sudo rm -f tmp/alpine-initrd/{usr/bin/qemu-aarch64-static,etc/resolv.conf}
+	( cd tmp/alpine-initrd && sudo find . | sudo cpio -o -H newc ) | gzip -c > $@.tmp
+	mv $@.tmp $@
+
+.PHONY: alpine-initrd
+alpine-initrd: image/alpine-initrd-arm64.img.gz
 
 image/bootengine.cpio.gz: bootengine.cpio.gz
 	cp $< $@
@@ -95,7 +112,7 @@ image: image/rk3328evb-trust.img \
 	image/rk3328evb-uboot.bin \
 	image/rk3328evb-miniloader.img \
 	image/kernel-arm64 \
-	image/rockchip/rk3328-rock64.dtb \
+	image/dtbs/rockchip/rk3328-rock64.dtb \
 	image/alpine-initrd-arm64.img.gz \
 	image/pxelinux.cfg/default-arm-rockchip \
 	image/extlinux/extlinux.conf
@@ -146,3 +163,6 @@ kernel-menuconfig:
 	make -C kernel ARCH=arm64 menuconfig
 	make -C kernel ARCH=arm64 savedefconfig
 	cp kernel/defconfig kernel/arch/arm64/configs/$(KERNEL_DEFCONFIG)
+
+sync:
+	rsync --update --checksum -av image/. router.home:/srv/tftp/
