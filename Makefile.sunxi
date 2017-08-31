@@ -1,0 +1,17 @@
+UBOOT_CONFIG := pine64_plus
+
+u-boot-sunxi:
+	git clone https://github.com/linux-sunxi/u-boot-sunxi $@ --single-branch --depth=30
+
+u-boot-sunxi/configs/$(UBOOT_CONFIG)_defconfig: u-boot-sunxi
+
+u-boot-sunxi/.config: u-boot-sunxi/configs/$(UBOOT_CONFIG)_defconfig
+	make -C u-boot-sunxi $(UBOOT_CONFIG)_defconfig
+
+u-boot-sunxi/u-boot-sunxi-with-spl.bin: u-boot-sunxi/.config
+	make -C u-boot-sunxi ARCH=arm CROSS_COMPILE="$(LINARO_CC)" u-boot-sunxi-with-spl.bin -j4
+
+image/$(UBOOT_CONFIG)-uboot.bin: u-boot-sunxi/u-boot-sunxi-with-spl.bin
+	cp $< $@
+
+image-sunxi: image/$(UBOOT_CONFIG)-uboot.bin

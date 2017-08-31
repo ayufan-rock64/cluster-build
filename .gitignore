@@ -1,6 +1,8 @@
 /arm-trusted-firmware/
 /rkbin/
 /rkflashtool/
-/u-boot/
+/u-boot-*/
 /image/
 /kernel/
+/gcc-linaro-*/
+/tmp/
