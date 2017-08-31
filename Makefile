@@ -11,7 +11,8 @@ include Makefile.sunxi.mk
 image: image-kernel \
 	image-rockchip \
 	image-sunxi \
-	image-pxe
+	image-pxe \
+	image-rancher
 
 sync:
 	rsync --delete --update --checksum -av image/. router.home:/srv/tftp/

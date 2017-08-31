@@ -10,3 +10,6 @@ image/rancheros-initrd-arm64.img.gz: tmp/rancheros-initrd-arm64.img.gz
 	( cd tmp/rancheros-initrd && sudo find . | sudo cpio -o -H newc | gzip -c ) > $@.tmp
 	sudo rm -rf tmp/rancheros-initrd
 	mv $@.tmp $@
+
+.PHONY: image-rancher
+image-rancher: image/rancheros-initrd-arm64.img.gz
