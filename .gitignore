@@ -1,4 +1,5 @@
 /arm-trusted-firmware/
+/arm-trusted-firmware-sunxi/
 /rkbin/
 /rkflashtool/
 /u-boot-*/
