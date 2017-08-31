@@ -14,4 +14,4 @@ image: image-kernel \
 	image-pxe
 
 sync:
-	rsync --update --checksum -av image/. router.home:/srv/tftp/
+	rsync --delete --update --checksum -av image/. router.home:/srv/tftp/

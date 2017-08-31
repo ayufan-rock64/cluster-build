@@ -7,6 +7,4 @@ image/extlinux/extlinux.conf: blobs/pxelinux.cfg/default-arm-rockchip
 	cp $< $@
 
 image-pxe: \
-	image/pxelinux.cfg/default-arm-rockchip \
-	image/pxelinux.cfg/default-arm-sunxi \
-	image/extlinux/extlinux.conf
+	image/pxelinux.cfg/default-arm

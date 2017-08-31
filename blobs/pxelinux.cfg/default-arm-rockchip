@@ -1,10 +1,5 @@
 label alpine
     kernel /kernel-arm64
     initrd /rancheros-initrd-arm64.img.gz
-    fdt /dtbs/rockchip/rk3328-rock64.dtb
+    devicetreedir /dtbs
     append earlycon=uart8250,mmio32,0xff130000 coherent_pool=1M ethaddr=${ethaddr} eth1addr=${eth1addr} serial=${serial#} rdinit=/init rancher.defaults.hostname=ros-${serial#} rancheros.autologin=tty0 rancher.password=mypassword rancher.docker.engine=docker-17.05.0-ce rancher.state.dev=LABEL=RANCHER_STATE rancher.state.autoformat=[/dev/mmcblk0p1]
-
-label alpine-nfs
-    kernel /kernel-arm64
-    fdt /dtbs/rockchip/rk3328-rock64.dtb
-    append earlycon=uart8250,mmio32,0xff130000 coherent_pool=1M ethaddr=${ethaddr} eth1addr=${eth1addr} serial=${serial#} ip=dhcp root=/dev/nfs rw nfsroot=192.168.88.1:/srv/nfs/alpine,vers=3,rsize=32768,wsize=32768
