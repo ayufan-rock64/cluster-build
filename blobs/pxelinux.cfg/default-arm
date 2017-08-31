@@ -1,0 +1,5 @@
+label alpine
+    kernel /kernel-arm64
+    initrd /rancheros-initrd-arm64.img.gz
+    devicetreedir /dtbs
+    append coherent_pool=1M ethaddr=${ethaddr} serial=${serial#} rdinit=/init rancher.defaults.hostname=ros-${serial#} rancheros.autologin=tty0 rancher.password=mypassword rancher.docker.engine=docker-17.05.0-ce rancher.state.dev=LABEL=RANCHER_STATE rancher.state.autoformat=[/dev/mmcblk0p1]

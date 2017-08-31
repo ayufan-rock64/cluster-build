@@ -1,12 +1,12 @@
 all: image
 
-include Makefile.kernel
-include Makefile.linaro
-include Makefile.pxe
-include Makefile.rancheros
-include Makefile.rockchip
-include Makefile.rockchip.debug
-include Makefile.sunxi
+include Makefile.kernel.mk
+include Makefile.linaro.mk
+include Makefile.pxe.mk
+include Makefile.rancheros.mk
+include Makefile.rockchip.mk
+include Makefile.rockchip.debug.mk
+include Makefile.sunxi.mk
 
 image: image-kernel \
 	image-rockchip \
