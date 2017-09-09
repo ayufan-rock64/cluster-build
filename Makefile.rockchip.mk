@@ -1,3 +1,7 @@
+ROCKCHIP_DDR_VERSION := 1.08
+ROCKCHIP_DDR_SPEED := 333MHz
+ROCKCHIP_LOADER_VERSION := 2.44
+
 arm-trusted-firmware:
 	git clone https://github.com/ARM-software/arm-trusted-firmware.git
 
@@ -26,10 +30,10 @@ u-boot-rockchip-build: image/rk3328evb-uboot.bin
 image/rk3328evb-trust.img: # rkbin/rk33/bl31.bin
 	rkbin/tools/trust_merger blobs/rk3328trust.ini
 
-image/rk3328evb-miniloader.img:
-	cat rkbin/rk33/rk3328_ddr_333MHz*.bin | dd of=miniloader.tmp bs=4 skip=1
+image/rk3328evb-miniloader.img: rkbin/rk33/rk3328_ddr_$(ROCKCHIP_DDR_SPEED)_v$(ROCKCHIP_DDR_VERSION).bin rkbin/rk33/rk3328_miniloader_v$(ROCKCHIP_LOADER_VERSION).bin
+	cat rkbin/rk33/rk3328_ddr_$(ROCKCHIP_DDR_SPEED)_v$(ROCKCHIP_DDR_VERSION).bin | dd of=miniloader.tmp bs=4 skip=1
 	u-boot-rockchip/tools/mkimage -n rk3328 -T rksd -d miniloader.tmp $@.tmp
-	cat rkbin/rk33/rk3328_miniloader*.bin >> $@.tmp
+	cat rkbin/rk33/rk3328_miniloader_v$(ROCKCHIP_LOADER_VERSION).bin >> $@.tmp
 	mv $@.tmp $@
 	rm miniloader.tmp
 

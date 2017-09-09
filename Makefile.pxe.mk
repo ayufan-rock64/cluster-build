@@ -7,4 +7,4 @@ image/extlinux/extlinux.conf: blobs/pxelinux.cfg/default-arm-rockchip
 	cp $< $@
 
 image-pxe: \
-	image/pxelinux.cfg/default-arm
+	$(patsubst blobs/%, image/%, $(wildcard blobs/pxelinux.cfg/*))

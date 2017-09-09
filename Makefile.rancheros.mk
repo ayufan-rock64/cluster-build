@@ -1,14 +1,16 @@
-tmp/rancheros-initrd-arm64.img.gz:
+RANCHER_VERSION ?= v1.1.0
+
+tmp/rancheros-initrd-arm64-$(RANCHER_VERSION).img.gz:
 	mkdir -p tmp
-	wget -O $@.tmp https://releases.rancher.com/os/latest/rootfs_arm64.tar.gz
+	wget -O $@.tmp https://releases.rancher.com/os/$(RANCHER_VERSION)/rootfs_arm64.tar.gz
 	mv $@.tmp $@
 
-image/rancheros-initrd-arm64.img.gz: tmp/rancheros-initrd-arm64.img.gz
-	sudo rm -rf tmp/rancheros-initrd
-	sudo mkdir tmp/rancheros-initrd
-	sudo tar -zxf $< -C tmp/rancheros-initrd
-	( cd tmp/rancheros-initrd && sudo find . | sudo cpio -o -H newc | gzip -c ) > $@.tmp
-	sudo rm -rf tmp/rancheros-initrd
+image/rancheros-initrd-arm64.img.gz: tmp/rancheros-initrd-arm64-$(RANCHER_VERSION).img.gz
+	rm -rf tmp/rancheros-initrd
+	mkdir tmp/rancheros-initrd
+	tar -zxf $< -C tmp/rancheros-initrd
+	( cd tmp/rancheros-initrd && find . | fakeroot cpio -o -H newc | gzip -c ) > $@.tmp
+	rm -rf tmp/rancheros-initrd
 	mv $@.tmp $@
 
 .PHONY: image-rancher

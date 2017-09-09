@@ -1,5 +1,15 @@
-label alpine
+label rancheros-nfs
+    kernel /kernel-arm64
+    devicetreedir /dtbs
+    append coherent_pool=1M ethaddr=${ethaddr} eth1addr=${eth1addr} serial=${serial#} panic=10 ip=dhcp root=/dev/nfs rw nfsroot=192.168.88.1:/srv/nfs/netboot-rancheros,vers=3,rsize=32768,wsize=32768 rdinit=/sbin/init rancher.defaults.hostname=ros-${serial#} rancheros.autologin=tty0 rancher.password=mypassword rancher.state.dev=LABEL=${serial#} rancher.state.wait=true rancher.state.required=true
+
+label ubuntu-zesty
+    kernel /kernel-arm64
+    devicetreedir /dtbs
+    append coherent_pool=1M ethaddr=${ethaddr} eth1addr=${eth1addr} serial=${serial#} ip=dhcp root=/dev/nfs rw nfsroot=192.168.88.1:/srv/nfs/ubuntu-zesty,vers=3,rsize=32768,wsize=32768
+
+label rancheros-initrd
     kernel /kernel-arm64
     initrd /rancheros-initrd-arm64.img.gz
     devicetreedir /dtbs
-    append coherent_pool=1M ethaddr=${ethaddr} serial=${serial#} rdinit=/init rancher.defaults.hostname=ros-${serial#} rancheros.autologin=tty0 rancher.password=mypassword rancher.docker.engine=docker-17.05.0-ce rancher.state.dev=LABEL=RANCHER_STATE rancher.state.autoformat=[/dev/mmcblk0p1]
+    append coherent_pool=1M ethaddr=${ethaddr} serial=${serial#} ip=dhcp rdinit=/init rancher.defaults.hostname=ros-${serial#} rancheros.autologin=tty0 rancher.password=mypassword rancher.state.dev=LABEL=${serial#} rancher.state.wait=true rancher.state.required=true
