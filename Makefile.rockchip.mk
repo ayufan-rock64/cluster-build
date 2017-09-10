@@ -1,6 +1,7 @@
-ROCKCHIP_DDR_VERSION := 1.08
-ROCKCHIP_DDR_SPEED := 333MHz
-ROCKCHIP_LOADER_VERSION := 2.44
+ROCKCHIP_DDR_VERSION ?= 1.08
+ROCKCHIP_DDR_SPEED ?= 333MHz
+ROCKCHIP_LOADER_VERSION ?= 2.44
+ROCKCHIP_UBOOT_CONFIG ?= rock64-rk3328_defconfig
 
 arm-trusted-firmware:
 	git clone https://github.com/ARM-software/arm-trusted-firmware.git
@@ -15,12 +16,12 @@ rkbin/rk33/bl31.bin: arm-trusted-firmware gcc-linaro-6.3.1-2017.05-x86_64_aarch6
 	make -C $< CROSS_COMPILE="$(LINARO_CC)" PLAT=rk3328 bl31
 	cp $</build/rk3328/release/bl31.bin $@
 
-u-boot-rockchip/.config: u-boot-rockchip/configs/rock64-rk3328_defconfig
-	make -C u-boot-rockchip rock64-rk3328_defconfig
-
 ifeq ($(FORCE), 1)
-.PHONY: u-boot-rockchip/u-boot-rockchip-dtb.bin
+.PHONY: u-boot-rockchip/.config
 endif
+u-boot-rockchip/.config: u-boot-rockchip/configs/$(ROCKCHIP_UBOOT_CONFIG)
+	make -C u-boot-rockchip $(ROCKCHIP_UBOOT_CONFIG)
+
 u-boot-rockchip/u-boot-dtb.bin: u-boot-rockchip/.config
 	make -C u-boot-rockchip CROSS_COMPILE="ccache aarch64-linux-gnu-" DEBUG=$(DEBUG) all -j4
 
