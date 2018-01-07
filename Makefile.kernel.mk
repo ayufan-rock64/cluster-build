@@ -10,11 +10,13 @@ ifeq ($(FORCE), 1)
 .PHONY: image/kernel-arm64
 endif
 image/kernel-arm64: kernel/.config
-	make -C kernel Image ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j4
+	make -C kernel Image ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j$$(nproc)
 	cp kernel/arch/arm64/boot/Image $@
 
-image/dtbs/rockchip/rk3328-rock64.dtb: image/kernel-arm64 kernel/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts kernel/arch/arm64/boot/dts/rockchip/rk3328.dtsi
-	make -C kernel dtbs ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j4
+image/dtbs/rockchip/rk3328-rock64.dtb: image/kernel-arm64 \
+	kernel/arch/arm64/boot/dts/rockchip/rk3328-rock64.dts \
+	kernel/arch/arm64/boot/dts/rockchip/rk3328.dtsi
+	make -C kernel dtbs ARCH=arm64 CROSS_COMPILE="ccache aarch64-linux-gnu-" -j$$(nproc)
 	make -C kernel dtbs_install ARCH=arm64 INSTALL_DTBS_PATH=$(CURDIR)/image/dtbs
 
 .PHONY: image-kernel
