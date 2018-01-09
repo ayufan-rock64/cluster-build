@@ -3,7 +3,8 @@
 /rkbin/
 /rkflashtool/
 /u-boot-*/
-/image/
+/tftproot/
 /kernel/
 /gcc-linaro-*/
 /tmp/
+/bootloaders/

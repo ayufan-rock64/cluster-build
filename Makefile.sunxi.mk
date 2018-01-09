@@ -24,12 +24,13 @@ tmp/u-boot-sunxi-%/u-boot-with-spl.bin: tmp/u-boot-sunxi-%/spl/sunxi-spl.bin tmp
 	cat $^ > $@.tmp
 	mv $@.tmp $@
 
-image/pine64_plus-uboot.bin: tmp/u-boot-sunxi-pine64_plus/u-boot-with-spl.bin
+bootloaders/pine64_plus-uboot.bin: tmp/u-boot-sunxi-pine64_plus/u-boot-with-spl.bin
 	cp $^ $@
 
-image/sopine_baseboard-uboot.bin: tmp/u-boot-sunxi-sopine_baseboard/u-boot-with-spl.bin
+bootloaders/sopine_baseboard-uboot.bin: tmp/u-boot-sunxi-sopine_baseboard/u-boot-with-spl.bin
 	cp $^ $@
 
+.PHONY: image-sunxi
 image-sunxi: \
 	image/pine64_plus-uboot.bin \
 	image/sopine_baseboard-uboot.bin

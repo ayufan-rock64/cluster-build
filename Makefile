@@ -1,4 +1,4 @@
-all: image
+all: tftproot
 
 include Makefile.kernel.mk
 include Makefile.linaro.mk
@@ -6,9 +6,11 @@ include Makefile.pxe.mk
 include Makefile.rancheros.mk
 include Makefile.sunxi.mk
 
-image: image-kernel \
-	image-pxe \
-	image-rancher
+.PHONY: tftproot
+tftproot: tftproot-kernel \
+	tftproot-pxelinux.cfg \
+	tftproot-rancheros
 
+.PHONY: sync
 sync:
-	rsync --delete --update --checksum -av image/. router.home:/srv/tftp/
+	rsync --delete --update --checksum -av tftproot/. router.home:/srv/tftp/
