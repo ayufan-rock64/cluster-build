@@ -1,0 +1,4 @@
+label ubuntu-nfs
+    kernel /kernel-arm64
+    devicetreedir /dtbs
+    append coherent_pool=1M ethaddr=${ethaddr} eth1addr=${eth1addr} serial=${serial#} ip=dhcp root=/dev/nfs rw nfsroot=192.168.88.1:/srv/nfs/ubuntu,vers=3,rsize=32768,wsize=32768
