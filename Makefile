@@ -1,10 +1,8 @@
 all: tftproot
 
 include Makefile.kernel.mk
-include Makefile.linaro.mk
 include Makefile.pxe.mk
 include Makefile.rancheros.mk
-include Makefile.sunxi.mk
 include Makefile.qemu.mk
 
 .PHONY: tftproot
