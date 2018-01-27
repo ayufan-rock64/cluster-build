@@ -10,12 +10,16 @@ set -- $(cat /proc/cmdline)
 
 SERIAL=""
 DEV=""
+ROOT_SIZE=4G
 DOCKER_SIZE=16G
 
 for x in "$@"; do
     case "$x" in
         serial=*)
             SERIAL="${x#serial=}"
+            ;;
+        rootsize=*)
+            ROOT_SIZE="${x#rootsize=}"
             ;;
         dockersize=*)
             DOCKER_SIZE="${x#dockersize=}"
@@ -28,24 +32,42 @@ if [ -z "$SERIAL" ]; then
     exit 1
 fi
 
-mkdir -p "/data/$SERIAL"
-
 # create docker image
+ROOT_IMG="/data/$SERIAL/root.img"
+if [ ! -f "$ROOT_IMG" ]; then
+    mkdir -p "$(dirname $ROOT_IMG)"
+    dd if=/dev/zero of="$ROOT_IMG.tmp" bs=1 seek="$ROOT_SIZE" count=1
+    mkfs.ext4 -t ext4 -L "root-$SERIAL" "$ROOT_IMG.tmp"
+    mv "$ROOT_IMG.tmp" "$ROOT_IMG"
+fi
+
 DOCKER_IMG="/data/$SERIAL/docker.img"
 if [ ! -f "$DOCKER_IMG" ]; then
+    mkdir -p "$(dirname $DOCKER_IMG)"
     dd if=/dev/zero of="$DOCKER_IMG.tmp" bs=1 seek="$DOCKER_SIZE" count=1
-    /mke2fs -t ext4 -L "$SERIAL" "$DOCKER_IMG.tmp"
+    mkfs.ext4 -t ext4 -L "docker-$SERIAL" "$DOCKER_IMG.tmp"
     mv "$DOCKER_IMG.tmp" "$DOCKER_IMG"
 fi
-losetup /dev/loop0 "$DOCKER_IMG"
 
-# create user image
-mkdir -p "/data/$SERIAL/upper"
-mkdir -p "/data/$SERIAL/work"
+# check and resize if needed
+e2fsck -f -y "$ROOT_IMG" || true
+resize2fs "$ROOT_IMG" || true
+losetup /dev/loop0 "$ROOT_IMG"
+losetup /dev/loop1 "$DOCKER_IMG"
 
-mount -t overlay overlay -o lowerdir=/,upperdir=/data/$SERIAL/upper,workdir=/data/$SERIAL/work /merged
-mount /dev/loop0 /merged/var/lib/docker
+# mount overlay
+mkdir -p /overlay
+mount /dev/loop0 /overlay
+mkdir -p /overlay/upper /overlay/work
+mount -t overlay overlay -o lowerdir=/,upperdir=/overlay/upper,workdir=/overlay/work /overlay
+rm -rf /overlay/var/lib/docker
+mkdir -p /overlay/var/lib/docker
+mount /dev/loop1 /overlay/var/lib/docker
 
-cd /merged
+# fix etc/resolv.conf
+ln -sf /proc/net/pnp /overlay/etc/resolv.conf
+
+# chroot
+cd /overlay
 mount --move . /
-exec chroot . /init
+exec chroot . /sbin/init

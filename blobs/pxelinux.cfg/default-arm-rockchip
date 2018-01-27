@@ -1,5 +1,0 @@
-label rancheros-initrd
-    kernel /kernel-arm64
-    initrd /rancheros-initrd-arm64.img.gz
-    devicetreedir /dtbs
-    append printk.devkmsg=on console=ttyS0,1500000n8 coherent_pool=1M ethaddr=${ethaddr} serial=${serial#} rdinit=/init rancher.defaults.hostname=rockchip-${serial#} rancheros.autologin=ttyS0 rancher.password=mypassword rancher.state.dev=LABEL=RANCHER_STATE rancher.state.autoformat=[/dev/sda] rancher.state.wait=true rancher.state.required=true

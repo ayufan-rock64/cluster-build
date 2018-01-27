@@ -1,4 +1,0 @@
-label rancheros-nfs
-    kernel /kernel-arm64
-    devicetreedir /dtbs
-    append coherent_pool=1M ethaddr=${ethaddr} eth1addr=${eth1addr} serial=${serial#} panic=10 ip=dhcp root=/dev/nfs rw nfsroot=192.168.88.1:/srv/nfs/netboot-rancheros,vers=3,rsize=32768,wsize=32768 rdinit=/sbin/init rancher.defaults.hostname=ros-${serial#} rancheros.autologin=tty0 rancher.password=mypassword rancher.state.dev=LABEL=${serial#} rancher.state.wait=true rancher.state.required=true
