@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -x
+
+mount -t proc proc /proc
+mount -t devtmpfs devtmpfs /dev
+
+set -e
+set -- $(cat /proc/cmdline)
+
+SERIAL=""
+DEV=""
+DOCKER_SIZE=16G
+
+for x in "$@"; do
+    case "$x" in
+        serial=*)
+            SERIAL="${x#serial=}"
+            ;;
+        dockersize=*)
+            DOCKER_SIZE="${x#dockersize=}"
+            ;;
+    esac
+done
+
+if [ -z "$SERIAL" ]; then
+    echo "Missing serial="
+    exit 1
+fi
+
+mkdir -p "/data/$SERIAL"
+
+# create docker image
+DOCKER_IMG="/data/$SERIAL/docker.img"
+if [ ! -f "$DOCKER_IMG" ]; then
+    dd if=/dev/zero of="$DOCKER_IMG.tmp" bs=1 seek="$DOCKER_SIZE" count=1
+    /mke2fs -t ext4 -L "$SERIAL" "$DOCKER_IMG.tmp"
+    mv "$DOCKER_IMG.tmp" "$DOCKER_IMG"
+fi
+losetup /dev/loop0 "$DOCKER_IMG"
+
+# create user image
+mkdir -p "/data/$SERIAL/upper"
+mkdir -p "/data/$SERIAL/work"
+
+mount -t overlay overlay -o lowerdir=/,upperdir=/data/$SERIAL/upper,workdir=/data/$SERIAL/work /merged
+mount /dev/loop0 /merged/var/lib/docker
+
+cd /merged
+mount --move . /
+exec chroot . /init

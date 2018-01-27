@@ -4,6 +4,7 @@ include Makefile.kernel.mk
 include Makefile.pxe.mk
 include Makefile.rancheros.mk
 include Makefile.qemu.mk
+include Makefile.ubuntu.mk
 
 .PHONY: tftproot
 tftproot: tftproot-kernel \

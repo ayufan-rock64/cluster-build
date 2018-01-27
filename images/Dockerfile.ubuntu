@@ -1,0 +1,38 @@
+FROM scratch
+
+ARG dist=xenial
+ADD ubuntu-${dist}-core-cloudimg-arm64-root.tar.gz /
+RUN echo Hello World
+
+RUN set -xe \
+# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L40-L48
+	&& echo '#!/bin/sh' > /usr/sbin/policy-rc.d \
+	&& echo 'exit 101' >> /usr/sbin/policy-rc.d \
+	&& chmod +x /usr/sbin/policy-rc.d \
+	\
+# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L54-L56
+	&& dpkg-divert --local --rename --add /sbin/initctl \
+	&& cp -a /usr/sbin/policy-rc.d /sbin/initctl \
+	&& sed -i 's/^exit.*/exit 0/' /sbin/initctl
+
+RUN set -xe \
+  && apt-get update -y \
+  && apt-get install -y apt-transport-https ca-certificates curl software-properties-common \
+  && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - \
+  && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
+  && add-apt-repository "deb https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(lsb_release -cs) stable" \
+  && add-apt-repository "deb http://apt.kubernetes.io/ kubernetes-$(lsb_release -cs) main" \
+  && apt-get update -y
+RUN apt-get install -y docker-ce docker-compose kubelet kubectl
+# RUN apt-get install -y kubeadm
+
+RUN set -xe \
+  && rm /sbin/initctl \
+  && rm /usr/sbin/policy-rc.d \
+  && dpkg-divert --remove /sbin/initctl \
+  && sed -i 's|After=rc.local.service|#\0|;' "/lib/systemd/system/serial-getty@.service" \
+  && rm -f /etc/ssh/ssh_host_* \
+  && apt-get clean
+
+ADD /scripts/early_init /
+RUN rm /.dockerenv

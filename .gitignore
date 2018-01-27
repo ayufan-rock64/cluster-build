@@ -1,3 +1,6 @@
 /tftproot/
 /kernel/
 /tmp/
+/*-initrd.img.gz
+/*.tar.gz
+/images/*.tar.gz
